@@ -1,0 +1,152 @@
+<?php
+
+class emka_formvalidation{
+	
+	public $errors;
+	
+	public function __construct()
+	{
+		$this->errors = array();
+	}
+	
+	public function inspect( $field , $str_field, $criterias )
+	{
+		$criterias = $this->extract_var($criteria);
+		$criteria = array_keys($criterias);
+		
+		foreach( $criteria as $c)
+		{
+				$this->errors[] = $this->$c( $str_field, $field, $criterias[$c] );
+		}
+		
+	}
+	
+	public function extract_var($variable){
+	$raw = explode("&",$variable);
+	 for ($i=0; $i <= count($raw)-1; $i++)
+	  {
+		 $data = explode('=', $raw[$i]);
+		 $var[$data[0]] = $data[1];  
+	  }
+	  return $var;
+	}
+	
+	public function automa( $rawfields = array(), $criterias)
+	{
+		$keys = array_keys($rawfields);
+		$criterias = $this->extract_var($criterias);
+		$criteria = array_keys($criterias);
+		foreach($keys as $key)
+		{
+			foreach($criteria as $c)
+			{
+				$this->errors[] = $this->$c( $key, $rawfields[$key], $criterias[$c]);
+			}
+		}
+	}
+	
+	public function get_results()
+	{
+		$arr = array();
+		
+		foreach($this->errors as $e){
+			if(!empty($e)){
+				$arr[] = $e;
+			}else{
+				continue;
+			}
+		}
+		
+		return $arr;
+	}
+	
+	private function not_empty( $str_field, $field, $extras )
+	{
+		if( empty( $field ) ) {
+			$e = $str_field." masih kosong";
+			return $e;
+		}
+		
+	}
+	
+	private function min_length( $str_field,$field, $length = 5 )
+	{
+		if( strlen( $field ) < $length ){
+			$e = $str_field." kurang dari ".$length." karakter";
+			return $e;
+		}
+		
+	}
+	
+	private function numeric( $str_field,$field, $extras )
+	{
+		if( is_numeric( $field ) ){
+			$e = $str_field." berupa angka";
+			return $e;
+		}		
+	}
+	
+	private function not_numeric( $str_field,$field, $extras )
+	{
+		if( !is_numeric( $field ) ){
+			$e = $str_field." tidak berupa angka";
+			return $e;
+		}
+		
+	}
+	
+	public function inspect_match( $str_field, $field1 = '', $field2 = '', $extras)
+	{
+		if( $field1 !== $field2 ){
+			$this->errors[] = $str_field . " tidak cocok";
+		}
+	}
+	
+	private function trim_lower($string){
+        
+        return trim(strtolower($string));
+    }
+    
+    
+	public function is_email($str_field,$string, $extras) {
+	
+        $string = $this->trim_lower($string);
+        //return filter_var($string, FILTER_VALIDATE_EMAIL);
+        
+        
+		$chars = "/^([a-z0-9+_]|\\-|\\.)+@(([a-z0-9_]|\\-)+\\.)+[a-z]{2,6}\$/i";
+	
+        if (strpos($string, '@') !== false && strpos($string, '.') !== false) {
+	    
+            if ( !preg_match($chars, $string)){
+				return $string . ' bukan merupakan email';
+			}
+		} 
+		else {
+				
+			return $string . ' bukan merupakan email';
+		}
+        
+    }
+    
+    private function is_url($str_field,$string, $extras){
+        
+        $string = $this->trim_lower($string);
+        return filter_var($string, FILTER_VALIDATE_URL);
+        /*
+        $chars = '|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i';
+        
+        if( ! preg_match( $chars, $string ))
+            return false;
+        else
+            return $string;
+        */
+    }
+    
+    private function is_positive_numeric($str_field,$string, $extras){
+	
+        return (bool) preg_match( '/^[0-9]*\.?[0-9]+$/', $string);
+    }
+	
+}
+?>
